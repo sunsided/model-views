@@ -45,7 +45,7 @@ struct User {
     
     // Email is optional
     #[views(get = "optional", create = "optional", patch = "optional")]
-    email: Option<String>,
+    email: String,
 }
 
 // Reading a user

@@ -8,7 +8,7 @@ pub struct TestModel {
     pub id: u64,
     #[views(get = "required")]
     pub name: String,
-    #[views(get = "required", create = "forbidden", patch = "optional")]
+    #[views(get = "required", create = "optional", patch = "optional")]
     pub author: NestedModel,
 }
 
@@ -35,6 +35,7 @@ fn it_works() {
 
     let _create = TestModelCreate {
         name: "foo".to_string(),
+        author: None
     };
 
     let _patch = TestModelPatch {
