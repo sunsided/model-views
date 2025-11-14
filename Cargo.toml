@@ -4,7 +4,7 @@ members = ["crates/*"]
 default-members = ["crates/model-views", "crates/model-views-derive"]
 
 [workspace.package]
-version = "0.0.0"
+version = "0.1.0"
 license = "EUPL-1.2"
 edition = "2024"
 rust-version = "1.90.0"
@@ -12,6 +12,9 @@ authors = [
     "Markus Mayer <markus.mayer@median-kliniken.de>",
 ]
 repository = "https://github.com/sunsided/model-views"
+description = "Type-safe view types for different access modes (Get, Create, Patch) on data models"
+keywords = ["dto", "api", "views", "serde", "patch"]
+categories = ["data-structures", "encoding", "web-programming"]
 
 [workspace.dependencies]
 chrono = "0.4"
