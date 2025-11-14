@@ -98,6 +98,144 @@ struct ViewsField {
     patch: Option<String>,
 }
 
+/// Derives view types for different access modes from a model struct.
+///
+/// This procedural macro generates up to three specialized view types based on the
+/// annotated model:
+///
+/// - `{Model}Get`: For read/retrieval operations
+/// - `{Model}Create`: For creation operations
+/// - `{Model}Patch`: For update/modification operations
+///
+/// # Generated Types
+///
+/// For a struct named `User`, the macro generates:
+/// - `UserGet` with appropriate `Serialize` derives (if serde enabled)
+/// - `UserCreate` with appropriate `Deserialize` derives (if serde enabled)
+/// - `UserPatch` with `Default` and `Deserialize` derives (if serde enabled)
+///
+/// Each generated type implements `View<ViewMode{Get,Create,Patch}>` for the original type,
+/// allowing generic code to work with different view modes.
+///
+/// # Container Attributes
+///
+/// The `#[views(...)]` attribute on the struct itself accepts:
+///
+/// - `crate = "path"`: Override the path to the `model_views` crate. Useful when
+///   re-exporting or when the crate is available under a different name.
+///   
+///   ```rust,ignore
+///   #[derive(Views)]
+///   #[views(crate = "my_models::views")]
+///   struct User { /* ... */ }
+///   ```
+///
+/// - `serde` or `serde = true`: Automatically derive `Serialize` for Get views and
+///   `Deserialize` for Create and Patch views. Also adds `deny_unknown_fields` and
+///   appropriate field-level serde attributes.
+///   
+///   ```rust,ignore
+///   #[derive(Views)]
+///   #[views(serde)]
+///   struct User { /* ... */ }
+///   ```
+///
+/// # Field Attributes
+///
+/// Each field can be independently configured for each view mode using `#[views(...)]`:
+///
+/// ## Get Mode (`get = "policy"`)
+///
+/// Controls how the field appears in the `{Model}Get` type:
+/// - `"required"` (default): Field is always present with its view type
+/// - `"optional"`: Field is wrapped in `Option<T>`
+/// - `"forbidden"`: Field is excluded from the Get view
+///
+/// ## Create Mode (`create = "policy"`)
+///
+/// Controls how the field appears in the `{Model}Create` type:
+/// - `"required"` (default): Field must be provided during creation
+/// - `"optional"`: Field is wrapped in `Option<T>`, with serde's `default` and
+///   `skip_serializing_if` attributes when serde is enabled
+/// - `"forbidden"`: Field is excluded from the Create view
+///
+/// ## Patch Mode (`patch = "policy"`)
+///
+/// Controls how the field appears in the `{Model}Patch` type:
+/// - `"patch"` (default): Field is wrapped in `Patch<T>`, allowing explicit ignore/update
+/// - `"optional"`: Field is wrapped in `Patch<Option<T>>`
+/// - `"forbidden"`: Field is excluded from the Patch view
+///
+/// # Examples
+///
+/// ## Basic Usage
+///
+/// ```rust,ignore
+/// use model_views::Views;
+///
+/// #[derive(Views)]
+/// struct Article {
+///     // ID only appears in Get view (auto-generated, can't be set)
+///     #[views(get = "required", create = "forbidden", patch = "forbidden")]
+///     id: u64,
+///     
+///     // Title is required everywhere
+///     #[views(get = "required", create = "required", patch = "patch")]
+///     title: String,
+///     
+///     // Published status can be patched
+///     #[views(get = "required", create = "optional", patch = "patch")]
+///     published: bool,
+/// }
+/// ```
+///
+/// This generates:
+/// - `ArticleGet { id: u64, title: String, published: bool }`
+/// - `ArticleCreate { title: String, published: Option<bool> }`
+/// - `ArticlePatch { title: Patch<String>, published: Patch<bool> }`
+///
+/// ## With Serde Support
+///
+/// ```rust,ignore
+/// #[derive(Views)]
+/// #[views(serde)]
+/// struct User {
+///     #[views(get = "required", create = "forbidden", patch = "forbidden")]
+///     id: u64,
+///     #[views(get = "required", create = "required", patch = "patch")]
+///     name: String,
+/// }
+/// ```
+///
+/// The generated types will have appropriate `Serialize`/`Deserialize` derives.
+///
+/// ## Generic Types
+///
+/// The macro supports generic parameters:
+///
+/// ```rust,ignore
+/// #[derive(Views)]
+/// struct Container<T> {
+///     #[views(get = "required", create = "required", patch = "patch")]
+///     value: T,
+/// }
+/// ```
+///
+/// # Panics
+///
+/// The macro will panic at compile time if:
+/// - Applied to an enum or union (only structs with named fields are supported)
+/// - An unknown policy value is used (e.g., `get = "invalid"`)
+/// - The `crate` attribute contains an invalid path
+///
+/// # Implementation Details
+///
+/// - View types only include fields that have at least one non-forbidden policy
+/// - If all fields are forbidden for a view mode, that view type is still generated
+///   (as an empty struct)
+/// - Generated types preserve the original struct's visibility and generic parameters
+/// - Non-`#[views(...)]` attributes from the original struct are copied to generated types
+/// - When serde is enabled, optional create fields get `#[serde(default, skip_serializing_if = "Option::is_none")]`
 #[proc_macro_derive(Views, attributes(views, view))]
 #[allow(clippy::missing_panics_doc,clippy::cognitive_complexity,clippy::too_many_lines)]
 pub fn derive_views(input: TokenStream) -> TokenStream {
