@@ -9,6 +9,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 authors.workspace = true
+readme = "../../README.md"
 
 [features]
 default = ["derive", "serde"]
@@ -19,7 +20,7 @@ chrono = ["dep:chrono"]
 
 [dependencies]
 chrono = { workspace = true, optional = true }
-model-views-derive = { version = "0.1.0", path = "../model-views-derive", optional = true }
+model-views-derive = { version = "0.1.1", path = "../model-views-derive", optional = true }
 serde = { workspace = true, optional = true }
 uuid = { workspace = true, optional = true }
 
