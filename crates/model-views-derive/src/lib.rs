@@ -1,3 +1,66 @@
+//! Procedural macro for deriving view types from models.
+//!
+//! This crate provides the `#[derive(Views)]` macro that automatically generates
+//! specialized view types for different access modes (Get, Create, Patch) from a
+//! base model struct.
+//!
+//! # Overview
+//!
+//! The `Views` derive macro generates up to three view types for a model:
+//!
+//! - **`{Model}Get`**: A read-only view for retrieving data
+//! - **`{Model}Create`**: A view for creating new instances
+//! - **`{Model}Patch`**: A view for partial updates using the `Patch<T>` wrapper
+//!
+//! Each generated type only includes fields relevant to its access mode, based on
+//! field-level attributes that specify visibility policies.
+//!
+//! # Field Policies
+//!
+//! Control field visibility in each view using these attributes:
+//!
+//! - `#[views(get = "policy")]`: Controls field visibility in the Get view
+//!   - `"required"` (default): Field is always present
+//!   - `"optional"`: Field is wrapped in `Option<T>`
+//!   - `"forbidden"`: Field is excluded from this view
+//!
+//! - `#[views(create = "policy")]`: Controls field visibility in the Create view
+//!   - `"required"` (default): Field must be provided
+//!   - `"optional"`: Field is wrapped in `Option<T>`
+//!   - `"forbidden"`: Field is excluded from this view
+//!
+//! - `#[views(patch = "policy")]`: Controls field visibility in the Patch view
+//!   - `"patch"` (default): Field is wrapped in `Patch<T>`
+//!   - `"optional"`: Field is wrapped in `Patch<Option<T>>`
+//!   - `"forbidden"`: Field is excluded from this view
+//!
+//! # Container Attributes
+//!
+//! - `#[views(crate = "path")]`: Override the path to the `model_views` crate
+//! - `#[views(serde)]`: Automatically derive `Serialize`/`Deserialize` for generated types
+//!
+//! # Example
+//!
+//! ```rust,ignore
+//! #[derive(Views)]
+//! #[views(serde)]
+//! struct User {
+//!     #[views(get = "required", create = "forbidden", patch = "forbidden")]
+//!     id: i64,
+//!     
+//!     #[views(get = "required", create = "required", patch = "patch")]
+//!     name: String,
+//!     
+//!     #[views(get = "optional", create = "optional", patch = "optional")]
+//!     email: String,
+//! }
+//! ```
+//!
+//! This generates:
+//! - `UserGet` with `id: i64`, `name: String`, `email: Option<Option<String>>`
+//! - `UserCreate` with `name: String`, `email: Option<Option<String>>`
+//! - `UserPatch` with `name: Patch<String>`, `email: Patch<Option<String>>`
+
 #![allow(clippy::option_if_let_else)]
 
 use darling::{FromDeriveInput, FromField, util::Ignored};
