@@ -1,0 +1,28 @@
+[workspace]
+resolver = "2"
+members = ["crates/*"]
+default-members = ["crates/model-views", "crates/model-views-derive"]
+
+[workspace.package]
+version = "0.0.0"
+license = "EUPL-1.2"
+edition = "2024"
+rust-version = "1.90.0"
+authors = [
+    "Markus Mayer <markus.mayer@median-kliniken.de>",
+]
+repository = "https://github.com/sunsided/model-views"
+
+[workspace.dependencies]
+chrono = "0.4"
+darling = "0.21"
+quote = "1.0"
+proc-macro2 = "1.0"
+serde = { version = "1.0", default-features = false }
+syn = "2.0"
+uuid = "1.18"
+
+
+[workspace.lints.clippy]
+pedantic = "deny"
+nursery = "warn"

@@ -1,0 +1,22 @@
+[package]
+name = "model-views"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+default = ["derive", "serde"]
+derive = ["dep:model-views-derive"]
+serde = ["dep:serde", "serde/derive", "serde/alloc"]
+uuid = ["dep:uuid"]
+chrono = ["dep:chrono"]
+
+[dependencies]
+chrono = { workspace = true, optional = true }
+model-views-derive = { path = "../model-views-derive", optional = true }
+serde = { workspace = true, optional = true }
+uuid = { workspace = true, optional = true }
+
+[[test]]
+name = "derive"
+path = "tests/derive.rs"
+required-features = ["derive"]
