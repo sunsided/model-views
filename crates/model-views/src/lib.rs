@@ -53,7 +53,7 @@
 //!     id: u64,
 //!     
 //!     // Name is always required for all operations
-//!     #[views(get = "required", create = "required", patch = "patch")]
+//!     #[views(get = "required", create = "required", patch = "required")]
 //!     name: String,
 //!     
 //!     // Email is optional everywhere
@@ -97,7 +97,7 @@
 //! #     id: u64,
 //! #
 //! #     // Name is always required for all operations
-//! #     #[views(get = "required", create = "required", patch = "patch")]
+//! #     #[views(get = "required", create = "required", patch = "required")]
 //! #     name: String,
 //! #
 //! #     // Email is optional everywhere

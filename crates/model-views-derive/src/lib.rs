@@ -180,11 +180,11 @@ struct ViewsField {
 ///     id: u64,
 ///     
 ///     // Title is required everywhere
-///     #[views(get = "required", create = "required", patch = "patch")]
+///     #[views(get = "required", create = "required", patch = "required")]
 ///     title: String,
 ///     
 ///     // Published status can be patched
-///     #[views(get = "required", create = "optional", patch = "patch")]
+///     #[views(get = "required", create = "optional", patch = "required")]
 ///     published: bool,
 /// }
 /// ```
@@ -202,7 +202,7 @@ struct ViewsField {
 /// struct User {
 ///     #[views(get = "required", create = "forbidden", patch = "forbidden")]
 ///     id: u64,
-///     #[views(get = "required", create = "required", patch = "patch")]
+///     #[views(get = "required", create = "required", patch = "required")]
 ///     name: String,
 /// }
 /// ```
@@ -216,7 +216,7 @@ struct ViewsField {
 /// ```rust,ignore
 /// #[derive(Views)]
 /// struct Container<T> {
-///     #[views(get = "required", create = "required", patch = "patch")]
+///     #[views(get = "required", create = "required", patch = "required")]
 ///     value: T,
 /// }
 /// ```
@@ -280,7 +280,7 @@ pub fn derive_views(input: TokenStream) -> TokenStream {
             // policies with defaults
             let get_p = f.get.as_deref().unwrap_or("required");
             let crt_p = f.create.as_deref().unwrap_or("required");
-            let patch_p = f.patch.as_deref().unwrap_or("patch");
+            let patch_p = f.patch.as_deref().unwrap_or("required");
 
             // ---- GET / READ ----
             match get_p {
@@ -323,7 +323,7 @@ pub fn derive_views(input: TokenStream) -> TokenStream {
 
             // ---- PATCH ----
             match patch_p {
-                "patch" => {
+                "required" => {
                     has_patch = true;
                     patch_fields.push(quote! {
                         pub #ident: #mv_patch_t<<#fty as #mv_view<#mv_patch>>::Type>,
